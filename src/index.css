@@ -1,0 +1,105 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Space+Grotesk:wght@400;500;600;700&family=Michroma&family=Caveat:wght@700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Bricolage Grotesque", sans-serif;
+  --font-eyebrow: "Michroma", sans-serif;
+  --font-hand: "Caveat", cursive;
+}
+
+:root {
+  --pearl: #EBDDC5;
+  --police-blue: #2E4365;
+  --buff: #F3D58D;
+  --marigold: #E5902C;
+  --citrine-brown: #8A3B08;
+  --paper-grain-opacity: 0.05;
+  --paper-edge-shadow: rgba(46, 67, 101, 0.12);
+  --paper-warm-cream: #F5EBD8;
+  
+  --shadow-card: 2px 2px 0px rgba(46, 67, 101, 0.08);
+  --shadow-lifted: 4px 6px 0px rgba(138, 59, 8, 0.12);
+  --shadow-pinned: 1px 2px 0px rgba(46, 67, 101, 0.15);
+}
+
+html, body {
+  background-color: var(--pearl);
+  color: var(--police-blue);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+/* Custom Scrollbar for the editorial layout */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--pearl);
+  border-left: 1px solid rgba(46, 67, 101, 0.1);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--police-blue);
+  border: 2px solid var(--pearl);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--marigold);
+}
+
+/* Selection style */
+::selection {
+  background-color: var(--marigold);
+  color: var(--pearl);
+}
+
+/* Grid overlay background style */
+.notebook-grid-overlay {
+  background-image: linear-gradient(rgba(46, 67, 101, 0.04) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(46, 67, 101, 0.04) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+.notebook-grid-overlay-strong {
+  background-image: linear-gradient(rgba(46, 67, 101, 0.08) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(46, 67, 101, 0.08) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Paper noise svg background simulation */
+.paper-grain {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: var(--paper-grain-opacity);
+  z-index: 999;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+/* Pencil writing animations */
+@keyframes draw-line {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-draw {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: draw-line 2.5s ease-out forwards;
+}
+
+/* Alternate paper themes */
+body.alt-theme {
+  --pearl: #D7E1D3; /* Muted olive/sage paper */
+  --police-blue: #1C2E24; /* Deep forest ink */
+  --buff: #C5D5BC;
+  --marigold: #A45C30; /* Rust orange */
+  --citrine-brown: #5E2F11;
+  background-color: var(--pearl);
+}

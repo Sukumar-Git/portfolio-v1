@@ -1,0 +1,6 @@
+{
+  "name": "Sukumar Pokkuluri Portfolio",
+  "description": "Sukumar Pokkuluri's handcrafted modern retro editorial portfolio built with a paper texture system and kinetic opening sequence.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
