@@ -21,89 +21,98 @@ export default function OpeningExperience({ onComplete }: OpeningExperienceProps
   const skipBtnRef = useRef<HTMLButtonElement>(null);
   const wordRefs = useRef<(HTMLDivElement | null)[]>([]);
   const nameRef = useRef<HTMLDivElement>(null);
-  const [skipped, setSkipped] = useState(false);
+  const hasFinishedRef = useRef(false);
+
+  // Dynamic subset of 3 greetings to keep the experience beautifully balanced and paced
+  const [activeGreetings] = useState(() => {
+    const telugu = GREETINGS.find(g => g.lang === "Telugu") || GREETINGS[1];
+    const others = GREETINGS.filter(g => g.lang !== "Telugu");
+    const shuffled = [...others].sort(() => 0.5 - Math.random());
+    return [shuffled[0], telugu, shuffled[1]];
+  });
+
+  const handleFinish = () => {
+    if (hasFinishedRef.current) return;
+    hasFinishedRef.current = true;
+    onComplete();
+  };
 
   useEffect(() => {
     // Check prefers-reduced-motion
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     if (mediaQuery.matches) {
-      onComplete();
+      handleFinish();
       return;
     }
 
-    // GSAP Kinetic Typography Timeline
+    // GSAP Kinetic Typography Timeline - strictly engineered to end beautifully around 5.0 seconds
     const tl = gsap.timeline({
-      onComplete: () => {
-        if (!skipped) {
-          handleFinish();
-        }
-      }
+      onComplete: handleFinish
     });
 
-    // Gather elements to animate
+    // Gather active elements to animate
     const validWordElements = wordRefs.current.filter((el): el is HTMLDivElement => el !== null);
     const activeWords = [...validWordElements, nameRef.current];
     
-    // Initial states: hide all
-    gsap.set(activeWords, { opacity: 0, scale: 0.8, filter: 'blur(12px)' });
+    // Initial state: subtle blur, scale down, invisible for Butter-smooth slide up
+    gsap.set(activeWords, { opacity: 0, scale: 0.94, filter: 'blur(8px)', y: 15 });
 
-    // Animate each greeting sequentially with high-fidelity pacing
+    // Animate each greeting with highly polished, fluid pacing
     validWordElements.forEach((wordEl, index) => {
+      // Smooth slide up & fade in
       tl.to(wordEl, {
         opacity: 1,
         scale: 1,
+        y: 0,
         filter: 'blur(0px)',
-        duration: 0.4,
-        ease: 'back.out(1.8)'
-      }, index === 0 ? undefined : '-=0.18')
+        duration: 0.5,
+        ease: 'power3.out'
+      }, index === 0 ? 0 : `-=0.15`)
+      // Butter-smooth slide up & fade out
       .to(wordEl, {
         opacity: 0,
-        scale: 1.1,
-        filter: 'blur(8px)',
-        duration: 0.22,
-        delay: 0.35,
-        ease: 'power2.in'
+        scale: 1.04,
+        y: -15,
+        filter: 'blur(5px)',
+        duration: 0.3,
+        delay: 0.5,
+        ease: 'power3.in'
       });
     });
 
-    // Final Name State (Bricolage Display, Police Blue)
+    // Final Name State - elegant reveal of your name
     tl.to(nameRef.current, {
       opacity: 1,
       scale: 1,
+      y: 0,
       filter: 'blur(0px)',
-      duration: 0.65,
-      ease: 'power3.out'
-    }, '-=0.1')
+      duration: 0.7,
+      ease: 'power4.out'
+    }, '-=0.15')
+    // Hold it for a moment, then prepare for the transition
     .to(nameRef.current, {
       opacity: 0,
-      scale: 0.95,
-      filter: 'blur(5px)',
+      scale: 1.05,
+      y: -10,
+      filter: 'blur(4px)',
       duration: 0.35,
-      delay: 0.7,
-      ease: 'power2.in'
+      delay: 0.5,
+      ease: 'power3.in'
     });
 
-    // Fade out main background container at the very end
+    // Premium Transition: container scales up slightly and blurs out, simulating a physical notebook page zoom-in
     tl.to(containerRef.current, {
       opacity: 0,
-      duration: 0.35,
-      ease: 'power2.out'
-    }, '-=0.15');
+      scale: 1.08,
+      filter: 'blur(8px)',
+      duration: 0.5,
+      ease: 'power2.inOut'
+    }, '-=0.35');
 
     return () => {
       tl.kill();
     };
-  }, [onComplete, skipped]);
-
-  const handleFinish = () => {
-    setSkipped(true);
-    onComplete();
-  };
-
-  const handleSkip = (e: React.MouseEvent | React.KeyboardEvent) => {
-    e.stopPropagation();
-    handleFinish();
-  };
+  }, [onComplete]);
 
   return (
     <div
@@ -118,7 +127,10 @@ export default function OpeningExperience({ onComplete }: OpeningExperienceProps
       {/* Skipping affordance */}
       <button
         ref={skipBtnRef}
-        onClick={handleSkip}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleFinish();
+        }}
         className="absolute top-8 right-8 z-[1010] px-4 py-2 border border-[#2E4365]/30 rounded font-mono text-xs text-[#2E4365]/60 hover:text-[#2E4365] hover:border-[#2E4365] transition-all bg-[#EBDDC5]/80 active:scale-95 cursor-pointer"
       >
         [ ESCAPE / SKIP ]
@@ -127,7 +139,7 @@ export default function OpeningExperience({ onComplete }: OpeningExperienceProps
       {/* Typography Stage */}
       <div className="relative flex justify-center items-center h-48 w-full max-w-4xl px-4">
         {/* Dynamic Greetings */}
-        {GREETINGS.map((greeting, index) => (
+        {activeGreetings.map((greeting, index) => (
           <div
             key={index}
             ref={(el) => { wordRefs.current[index] = el; }}
@@ -159,3 +171,4 @@ export default function OpeningExperience({ onComplete }: OpeningExperienceProps
     </div>
   );
 }
+

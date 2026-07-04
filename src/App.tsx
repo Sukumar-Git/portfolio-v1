@@ -84,17 +84,9 @@ export default function App() {
   // Konami keys
   const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 
-  // Handle Opening Experience setting in sessionStorage
-  useEffect(() => {
-    const skipOpening = sessionStorage.getItem('sukumar_portfolio_skip_opening');
-    if (skipOpening === 'true') {
-      setShowOpening(false);
-    }
-  }, []);
-
+  // Handle Opening Experience setting (plays on every refresh for design review)
   const handleOpeningComplete = () => {
     setShowOpening(false);
-    sessionStorage.setItem('sukumar_portfolio_skip_opening', 'true');
   };
 
   // Clock ticks
@@ -1377,6 +1369,19 @@ export default function App() {
           {/* Quick instructions & clock */}
           <div className="flex flex-col md:items-end gap-3 text-left md:text-right">
             <div className="flex flex-wrap md:justify-end gap-4 font-mono text-[10px] text-[#2E4365]/60 uppercase items-center">
+              {/* Replay Intro button */}
+              <button 
+                onClick={() => {
+                  playPaperFlip();
+                  setShowOpening(true);
+                }}
+                className="flex items-center gap-1 bg-[#EBDDC5] hover:bg-[#F3D58D] border border-[#2E4365]/30 px-2 py-1 rounded-sm text-[10px] text-[#2E4365] font-mono cursor-pointer active:scale-95"
+                title="Replay the welcome animation"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-[#E5902C]" />
+                <span>REPLAY INTRO</span>
+              </button>
+
               {/* Sound toggle button */}
               <button 
                 onClick={() => {
