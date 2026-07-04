@@ -132,7 +132,7 @@ export const SECTIONS = [
   { id: 'hero', name: 'Notebook Cover' },
   { id: 'nexus-ai', name: 'Nexus AI centerpiece' },
   { id: 'other-projects', name: 'Other spreads' },
-  { id: 'why-i-build', name: 'Why I Build' },
+  { id: 'why-i-build', name: 'Field Notes' },
   { id: 'tech-stack', name: 'Toolbox' },
   { id: 'experience', name: 'Experience' },
   { id: 'education', name: 'Education' },

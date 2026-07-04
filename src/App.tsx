@@ -15,7 +15,10 @@ import {
   Clock, 
   Eye, 
   CheckCircle, 
-  AlertCircle 
+  AlertCircle,
+  Volume2,
+  VolumeX,
+  BookOpen
 } from 'lucide-react';
 
 import { 
@@ -35,6 +38,18 @@ import GlareHover from './components/GlareHover';
 import OpeningExperience from './components/OpeningExperience';
 import SketchbookModal from './components/SketchbookModal';
 import ArchitectureDiagram from './components/ArchitectureDiagram';
+import DeskMode from './components/DeskMode';
+
+// Audio Synthesizer Controls
+import {
+  playPaperFlip,
+  playPencilScratch,
+  playStampClack,
+  playSwitchClick,
+  toggleSound,
+  startHum,
+  stopHum
+} from './utils/audio';
 
 export default function App() {
   // State for Opening Experience & Easter Eggs
@@ -44,6 +59,11 @@ export default function App() {
   const [gridOverlay, setGridOverlay] = useState(true);
   const [konamiProgress, setKonamiProgress] = useState<string[]>([]);
   const [unlockedSecret, setUnlockedSecret] = useState(false);
+
+  // View Mode: 'JOURNAL' (default print/design notebook) or 'DESK' (interactive desk scene)
+  const [viewMode, setViewMode] = useState<'JOURNAL' | 'DESK'>('JOURNAL');
+  const [soundOn, setSoundOn] = useState(true);
+  const [activeProjIdx, setActiveProjIdx] = useState(0);
 
   // Time & Clock
   const [currentTime, setCurrentTime] = useState<string>('12:34:36 UTC');
@@ -90,7 +110,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Keyboard Shortcuts (B, G, and Konami Code)
+  // Keyboard Shortcuts (B, G, S, and Konami Code)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const key = e.key;
@@ -103,11 +123,23 @@ export default function App() {
       // 'B' to toggle alternate theme
       if (key === 'B' || key === 'b') {
         setAltTheme(prev => !prev);
+        playSwitchClick();
       }
 
       // 'G' to toggle grid overlay
       if (key === 'G' || key === 'g') {
         setGridOverlay(prev => !prev);
+        playPaperFlip();
+      }
+
+      // 'S' to toggle sound
+      if (key === 'S' || key === 's') {
+        setSoundOn(prev => {
+          const next = !prev;
+          toggleSound(next);
+          return next;
+        });
+        playSwitchClick();
       }
 
       // Konami tracker
@@ -121,6 +153,7 @@ export default function App() {
         const codeMatches = next.every((val, index) => val.toLowerCase() === konamiCode[index].toLowerCase());
         if (codeMatches && next.length === konamiCode.length) {
           setUnlockedSecret(true);
+          playStampClack();
           // Auto fade secret after 4s
           setTimeout(() => setUnlockedSecret(false), 4000);
           return [];
@@ -161,10 +194,12 @@ export default function App() {
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSending(true);
+    playPencilScratch();
 
     setTimeout(() => {
       setIsSending(false);
       setSendSuccess(true);
+      playStampClack();
       // Trigger mailto immediately after simulated visual success
       window.location.href = `mailto:vikaspokkuluri@gmail.com?body=${encodeURIComponent(emailText)}`;
       
@@ -183,11 +218,28 @@ export default function App() {
 
   const handleTabClick = (id: string) => {
     setActiveTab(id);
+    playPaperFlip();
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
+  if (viewMode === 'DESK') {
+    return (
+      <DeskMode 
+        onSwitchView={() => {
+          playPaperFlip();
+          setViewMode('JOURNAL');
+        }}
+        altTheme={altTheme}
+        setAltTheme={setAltTheme}
+        gridOverlay={gridOverlay}
+        setGridOverlay={setGridOverlay}
+        currentTime={currentTime}
+      />
+    );
+  }
 
   return (
     <div 
@@ -296,9 +348,20 @@ export default function App() {
           </button>
           <button 
             onClick={() => handleTabClick('contact')}
-            className="px-2 py-1 bg-[#E5902C] text-[#EBDDC5] font-bold rounded-sm border border-[#2E4365] hover:bg-[#8A3B08] hover:text-[#F3D58D] transition-all uppercase active:scale-95"
+            className="px-2 py-1 bg-[#E5902C] text-[#EBDDC5] font-bold rounded-sm border border-[#2E4365] hover:bg-[#8A3B08] hover:text-[#F3D58D] transition-all uppercase active:scale-95 cursor-pointer"
           >
             Message
+          </button>
+          
+          <button 
+            onClick={() => {
+              playPaperFlip();
+              setViewMode('DESK');
+            }}
+            className="px-2 py-1 bg-[#2E4365] text-[#F3D58D] font-bold rounded-sm border border-[#2E4365] hover:bg-[#8A3B08] transition-all uppercase active:scale-95 flex items-center gap-1 cursor-pointer"
+            title="Switch to Interactive Desk Workspace"
+          >
+            <span>🪵 Desk Mode</span>
           </button>
         </nav>
       </header>
@@ -309,12 +372,12 @@ export default function App() {
         {/* ================= HERO SECTION ================= */}
         <section 
           id="hero"
-          className="relative min-h-[70vh] flex flex-col justify-between pt-8 border-b-2 border-dashed border-[#2E4365]/20 pb-16"
+          className="relative min-h-[80vh] flex flex-col justify-between pt-8 border-b-2 border-dashed border-[#2E4365]/20 pb-16 overflow-visible"
           onMouseEnter={() => triggerCursorMode('EXPLORE')}
           onMouseLeave={() => triggerCursorMode('DEFAULT')}
         >
-          {/* Background marginalia and labels */}
-          <div className="absolute top-0 right-0 text-right select-none pointer-events-none">
+          {/* BACKGROUND LAYER 1: Parallax Margin / Coordinate Stamps */}
+          <div className="absolute top-0 right-0 text-right select-none pointer-events-none z-0">
             <div className="font-mono text-[10px] text-[#8A3B08]">
               LOG: 17.6868° N, 83.2185° E
             </div>
@@ -324,21 +387,37 @@ export default function App() {
           </div>
 
           {/* Left Binder Holes Simulation */}
-          <div className="absolute left-[-2rem] top-0 bottom-0 w-8 flex flex-col justify-around pointer-events-none opacity-40">
+          <div className="absolute left-[-2rem] top-0 bottom-0 w-8 flex flex-col justify-around pointer-events-none opacity-40 z-0">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="w-5 h-5 rounded-full bg-[#2E4365]/10 border border-[#2E4365]/20 shadow-inner" />
             ))}
           </div>
 
-          <div className="max-w-4xl">
+          {/* BACKGROUND LAYER 2: Scattered hand-sketched graphite vector annotations (SVG lines) */}
+          <div className="absolute inset-0 pointer-events-none select-none z-10">
+            <svg className="w-full h-full absolute inset-0 text-[#8A3B08]/40" fill="none" stroke="currentColor" strokeWidth="1.5">
+              {/* Pointing arrow from subtext to stamp */}
+              <path d="M 220 120 Q 180 80 150 110" strokeDasharray="3 3" />
+              <path d="M 152 101 L 150 110 L 159 108" strokeWidth="2" />
+              
+              {/* Circular pencil loop surrounding the main title accent */}
+              <path d="M 50 200 C 180 160, 320 180, 380 240 C 400 270, 310 290, 180 270 C 80 250, 40 210, 80 190" strokeWidth="1" strokeDasharray="2 4" />
+              
+              {/* Hand-sketched star near title */}
+              <path d="M 520 80 L 525 92 L 537 92 L 527 100 L 531 112 L 520 104 L 509 112 L 513 100 L 503 92 L 515 92 Z" />
+            </svg>
+          </div>
+
+          {/* LAYER 3: Core Typography & Stamp Elements */}
+          <div className="max-w-4xl relative z-20">
             {/* Stamp-like tag */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#F3D58D] border-2 border-[#2E4365] text-[#2E4365] rounded-sm shadow-xs font-mono text-xs mb-8 rotate-[-1deg]">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#F3D58D] border-2 border-[#2E4365] text-[#2E4365] rounded-sm shadow-xs font-mono text-xs mb-8 rotate-[-1deg] hover:rotate-1 transition-transform cursor-pointer" onClick={playStampClack}>
               <Sparkles className="w-4 h-4 text-[#E5902C]" />
               <span>LOGGED // PORTFOLIO v9.0</span>
             </div>
 
-            {/* Main title */}
-            <h1 className="font-display font-black text-5xl md:text-8xl tracking-tight leading-none text-[#2E4365] mb-6">
+            {/* Main title with subtle text drop-shadow to simulate embossed notebook print */}
+            <h1 className="font-display font-black text-5xl md:text-8xl tracking-tight leading-none text-[#2E4365] mb-6 select-none" style={{ textShadow: '2px 2px 0px rgba(46,67,101,0.06)' }}>
               SUKUMAR <br />
               <span className="text-[#E5902C]">POKKULURI</span>
             </h1>
@@ -362,8 +441,18 @@ export default function App() {
             </div>
           </div>
 
+          {/* LAYER 4: The Pinned "Creative Direction / Metaphor" Sticky Note */}
+          <div className="mt-10 lg:absolute lg:top-2/3 lg:right-0 max-w-sm bg-[#F5EBD8] border-2 border-[#2E4365] p-5 rounded-xs shadow-card rotate-[-2deg] hover:rotate-0 transition-transform duration-300 z-20" onMouseEnter={playPencilScratch}>
+            {/* Visual masking tape pinning it on top */}
+            <div className="absolute top-[-9px] left-1/3 w-28 h-4.5 bg-yellow-100/70 border border-yellow-200/50 rotate-[-2deg] pointer-events-none shadow-xs" />
+            <span className="font-mono text-[9px] text-[#8A3B08] font-bold block mb-1.5 uppercase tracking-widest">// CREATIVE DIRECTION BRIEF</span>
+            <p className="font-sans text-[11px] text-[#2E4365]/90 leading-relaxed italic">
+              "This portfolio must not resemble a dashboard or standard SDE template. It is a physical design journal documenting an engineering journey. Every interaction reinforces the illusion of turning pages, discovering notes, and exploring tactile artifacts."
+            </p>
+          </div>
+
           {/* Hero Bottom Marginalia */}
-          <div className="mt-16 pt-8 border-t border-[#2E4365]/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+          <div className="mt-16 pt-8 border-t border-[#2E4365]/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 relative z-20">
             <div className="flex items-center gap-3">
               <MapPin className="w-5 h-5 text-[#E5902C]" />
               <span className="font-mono text-xs text-[#2E4365]/80 uppercase">
@@ -372,15 +461,20 @@ export default function App() {
             </div>
 
             {/* Available flag with custom masking tape design */}
-            <div className="relative bg-[#F3D58D] border border-[#2E4365] px-4 py-2 rotate-[-1.5deg] shadow-xs">
+            <div className="relative bg-[#F3D58D] border border-[#2E4365] px-4 py-2 rotate-[-1.5deg] shadow-xs hover:rotate-0 transition-all cursor-pointer" onClick={playPaperFlip}>
               {/* Masking tape on top-left */}
-              <div className="absolute top-[-8px] left-[-15px] w-12 h-4 bg-yellow-100/60 border border-yellow-200/50 rotate-[-12deg]" />
+              <div className="absolute top-[-8px] left-[-15px] w-12 h-4 bg-yellow-100/60 border border-yellow-200/50 rotate-[-12deg] pointer-events-none" />
               
               <span className="font-mono text-xs font-bold text-[#2E4365] uppercase flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                 AVAILABLE FOR SDE ROLES — 2026
               </span>
             </div>
+          </div>
+
+          {/* Physical page number stamp */}
+          <div className="absolute bottom-0 right-0 font-mono text-[9px] text-[#2E4365]/40 select-none pointer-events-none uppercase tracking-widest mt-4">
+            Page 01 // Notebook Cover • July 2026 Entry
           </div>
         </section>
 
@@ -505,20 +599,25 @@ export default function App() {
             </div>
 
           </div>
+
+          {/* Physical page number stamp */}
+          <div className="absolute bottom-0 right-0 font-mono text-[9px] text-[#2E4365]/40 select-none pointer-events-none uppercase tracking-widest mt-4">
+            Page 02 // Nexus AI Centerpiece • July 2026 Entry
+          </div>
         </section>
 
 
         {/* ================= EDITORIAL SPREADS: OTHER PROJECTS ================= */}
         <section 
           id="other-projects"
-          className="relative py-12 border-b-2 border-dashed border-[#2E4365]/20 pb-20"
+          className="relative py-12 border-b-2 border-dashed border-[#2E4365]/20 pb-20 overflow-visible"
           onMouseEnter={() => triggerCursorMode('EXPLORE')}
           onMouseLeave={() => triggerCursorMode('DEFAULT')}
         >
           {/* Section Heading */}
-          <div className="mb-12">
+          <div className="mb-8">
             <span className="font-eyebrow text-xs tracking-widest text-[#8A3B08] uppercase block mb-2">
-              [ ADDITIONAL BLUEPRINTS ]
+              [ DIRECTORY TABS ]
             </span>
             <SplitText 
               text="PROJECT SPREADS" 
@@ -527,156 +626,228 @@ export default function App() {
               textAlign="left"
             />
             <div className="font-mono text-xs text-[#2E4365]/50 mt-1">
-              CLIPPINGS FROM THE ACTIVE WORK REPOSITORY
+              CLICK THE PAPER INDEX TABS TO FLIP OR BROWSE SPREADS
             </div>
           </div>
 
-          {/* Interactive Project Tab Header using our FlowingMenu */}
-          <div className="mb-12 border-2 border-[#2E4365] rounded-sm overflow-hidden shadow-xs">
-            <div className="bg-[#2E4365] text-[#EBDDC5] px-4 py-2 font-mono text-xs flex justify-between items-center">
-              <span>PROJECT DIRECTORY NAV (HOVER TABS)</span>
-              <span className="hidden sm:inline">[ FLIP PAGE ACCORDION ]</span>
+          {/* DUAL PAGE BINDER LAYOUT WITH SIDE TABS */}
+          <div className="relative grid grid-cols-1 xl:grid-cols-12 gap-0 items-start mt-10">
+            
+            {/* PHYSICAL INDEX TABS (Aligned on the left or top on mobile, acts like dividers) */}
+            <div className="xl:col-span-2 flex xl:flex-col gap-2 xl:gap-3 mb-6 xl:mb-0 xl:pr-4 z-20 overflow-x-auto xl:overflow-x-visible pb-3 xl:pb-0 scrollbar-none">
+              {OTHER_PROJECTS.map((proj, idx) => {
+                const isActive = idx === activeProjIdx;
+                // Soft vintage colors for tabs
+                const colors = [
+                  { bg: 'bg-[#C2D3CD]', border: 'border-[#4A6B5D]', text: 'text-[#23382F]' },
+                  { bg: 'bg-[#E3CBB5]', border: 'border-[#8C5D35]', text: 'text-[#4F3017]' },
+                  { bg: 'bg-[#D6C5DB]', border: 'border-[#6A4775]', text: 'text-[#3E2347]' },
+                  { bg: 'bg-[#C5D5E6]', border: 'border-[#426485]', text: 'text-[#1F364D]' }
+                ];
+                const themeColor = colors[idx % colors.length];
+
+                return (
+                  <button
+                    key={proj.id}
+                    onClick={() => {
+                      playPaperFlip();
+                      setActiveProjIdx(idx);
+                    }}
+                    className={`flex-shrink-0 text-left px-4 py-3 border-2 rounded-sm font-mono text-[11px] font-bold tracking-tight uppercase transition-all duration-300 relative group cursor-pointer ${
+                      isActive 
+                        ? `${themeColor.bg} ${themeColor.border} ${themeColor.text} translate-x-1 xl:translate-x-3 shadow-md`
+                        : 'bg-[#EBDDC5]/60 border-[#2E4365]/40 text-[#2E4365]/70 hover:bg-[#F5EBD8] hover:text-[#2E4365]'
+                    }`}
+                    style={{
+                      boxShadow: isActive ? '3px 3px 0px rgba(46,67,101,0.15)' : 'none'
+                    }}
+                  >
+                    {/* Folder index tab shape sticking out */}
+                    <div className="absolute left-[-6px] top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#2E4365]/20 rounded-l-xs group-hover:bg-[#E5902C]/40 hidden xl:block" />
+                    <span className="block text-[9px] opacity-60">TAB // 0{idx + 1}</span>
+                    <span className="block truncate max-w-[130px] xl:max-w-none">{proj.title}</span>
+                  </button>
+                );
+              })}
             </div>
-            <FlowingMenu items={
-              OTHER_PROJECTS.map(proj => ({
-                text: proj.title,
-                link: `#proj-${proj.id}`
-              }))
-            } />
-          </div>
 
-          {/* Grid of detailed project spreads */}
-          <div className="flex flex-col gap-20">
-            {OTHER_PROJECTS.map((project, index) => (
-              <div 
-                id={`proj-${project.id}`}
-                key={project.id} 
-                className="bg-[#F5EBD8] border-2 border-[#2E4365] p-6 md:p-10 rounded-sm relative shadow-card group hover:border-[#E5902C] transition-all duration-300"
-              >
-                {/* Visual binder tabs on top */}
-                <div className="absolute top-0 right-10 -translate-y-1/2 flex gap-1 bg-[#2E4365] px-2 py-1 text-white font-mono text-[9px] uppercase rounded-sm">
-                  <span>YEAR: {project.year}</span>
-                </div>
+            {/* OPEN JOURNAL DUAL-PAGE CONTAINER */}
+            <div className="xl:col-span-10 relative bg-[#F5EBD8] border-2 border-[#2E4365] rounded-sm p-4 md:p-8 xl:p-10 shadow-card overflow-hidden">
+              
+              {/* Notebook Binder Rings (Central Spiral) - Desktop Only */}
+              <div className="absolute left-1/2 top-0 bottom-0 w-8 -translate-x-1/2 hidden xl:flex flex-col justify-around pointer-events-none z-30 opacity-60">
+                {[...Array(12)].map((_, i) => (
+                  <div key={i} className="flex items-center justify-center gap-1">
+                    {/* Metal wire loop */}
+                    <div className="w-6 h-2 rounded-full border-2 border-[#2E4365] bg-[#EBDDC5] shadow-xs" />
+                  </div>
+                ))}
+              </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              {/* Central Divider Shadow Line */}
+              <div className="absolute left-1/2 top-0 bottom-0 w-0.5 border-l border-dashed border-[#2E4365]/10 -translate-x-1/2 hidden xl:block z-20 pointer-events-none" />
+
+              {/* RENDER ACTIVE PROJECT SPREAD (Animated page flip) */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeProjIdx}
+                  initial={{ opacity: 0, rotateY: -15, scale: 0.98 }}
+                  animate={{ opacity: 1, rotateY: 0, scale: 1 }}
+                  exit={{ opacity: 0, rotateY: 15, scale: 0.98 }}
+                  transition={{ duration: 0.35, ease: 'easeInOut' }}
+                  className="grid grid-cols-1 xl:grid-cols-2 gap-8 xl:gap-14 items-start relative z-10"
+                >
                   
-                  {/* Left block (Title & Architecture) */}
-                  <div className="lg:col-span-4 flex flex-col gap-6">
+                  {/* LEFT PAGE: Visual Catalog Ref & Architecture Blueprints */}
+                  <div className="flex flex-col gap-6 xl:pr-6">
                     <div>
-                      <span className="font-mono text-xs text-[#E5902C] font-black tracking-widest block mb-1">
-                        SPREAD // 0{index + 1}
-                      </span>
-                      <h3 className="font-display font-black text-2xl md:text-3xl text-[#2E4365] uppercase leading-tight tracking-tight">
-                        {project.title}
+                      <div className="flex justify-between items-start">
+                        <span className="font-mono text-xs text-[#E5902C] font-black tracking-widest block mb-1">
+                          SPREAD // 0{activeProjIdx + 1}
+                        </span>
+                        <span className="font-mono text-[9px] px-2 py-0.5 bg-[#2E4365]/10 text-[#2E4365] rounded-sm uppercase font-bold">
+                          YEAR // {OTHER_PROJECTS[activeProjIdx].year}
+                        </span>
+                      </div>
+                      <h3 className="font-display font-black text-2xl md:text-3xl text-[#2E4365] uppercase leading-none tracking-tight">
+                        {OTHER_PROJECTS[activeProjIdx].title}
                       </h3>
-                      <p className="font-sans text-xs text-[#2E4365]/60 mt-1 italic">
-                        Analog catalog reference node
+                      <p className="font-sans text-xs text-[#2E4365]/60 mt-1.5 italic">
+                        Technical layout & logical data bindings
                       </p>
                     </div>
 
-                    <div onMouseEnter={() => triggerCursorMode('DRAW')} onMouseLeave={() => triggerCursorMode('EXPLORE')}>
-                      <ArchitectureDiagram nodes={project.architecture} />
+                    {/* Hand-drawn vector sketch box surrounding architecture */}
+                    <div 
+                      className="border border-[#2E4365]/20 p-4 rounded-sm bg-[#EBDDC5]/20 relative group overflow-hidden"
+                      onMouseEnter={() => triggerCursorMode('DRAW')} 
+                      onMouseLeave={() => triggerCursorMode('EXPLORE')}
+                    >
+                      {/* Pencil bracket decoration */}
+                      <div className="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-[#8A3B08]/40" />
+                      <div className="absolute bottom-2 right-2 w-3 h-3 border-b-2 border-r-2 border-[#8A3B08]/40" />
+                      
+                      <ArchitectureDiagram nodes={OTHER_PROJECTS[activeProjIdx].architecture} />
+                      <div className="text-center font-mono text-[9px] text-[#2E4365]/40 mt-3 select-none uppercase">
+                        Fig // 0{activeProjIdx + 1}. System Node Topology
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-[#EBDDC5]/30 border border-dashed border-[#2E4365]/20 rounded-sm">
+                      <span className="font-mono text-[10px] text-[#8A3B08] font-bold block mb-1">NOTES // FIELD DISPATCH:</span>
+                      <p className="font-hand text-base text-[#2E4365] leading-snug">
+                        "Drafted after deploying production builds. The architecture node topology models logical services. Tested under persistent client transaction loads."
+                      </p>
                     </div>
                   </div>
 
-                  {/* Center block (Problem / Solution / Features) */}
-                  <div className="lg:col-span-5 flex flex-col gap-6">
+                  {/* RIGHT PAGE: Problem, Solution, Challenges & Key protocols */}
+                  <div className="flex flex-col gap-5 xl:pl-6">
+                    
+                    {/* Problem Definition */}
                     <div className="border-l-2 border-[#8A3B08] pl-4">
-                      <span className="font-mono text-[10px] text-[#8A3B08] tracking-widest uppercase block mb-1">
+                      <span className="font-mono text-[9px] text-[#8A3B08] tracking-widest uppercase block mb-0.5 font-bold">
                         [ RECOGNIZED PROBLEM ]
                       </span>
-                      <p className="font-sans text-sm text-[#2E4365] leading-relaxed">
-                        {project.problem}
+                      <p className="font-sans text-xs md:text-sm text-[#2E4365] leading-relaxed">
+                        {OTHER_PROJECTS[activeProjIdx].problem}
                       </p>
                     </div>
 
+                    {/* Solution Details */}
                     <div className="border-l-2 border-[#E5902C] pl-4">
-                      <span className="font-mono text-[10px] text-[#E5902C] tracking-widest uppercase block mb-1">
+                      <span className="font-mono text-[9px] text-[#E5902C] tracking-widest uppercase block mb-0.5 font-bold">
                         [ APPLIED SOLUTION ]
                       </span>
-                      <p className="font-sans text-sm text-[#2E4365] leading-relaxed">
-                        {project.solution}
+                      <p className="font-sans text-xs md:text-sm text-[#2E4365] leading-relaxed">
+                        {OTHER_PROJECTS[activeProjIdx].solution}
                       </p>
                     </div>
 
+                    {/* Key features */}
                     <div className="pt-4 border-t border-[#2E4365]/10">
-                      <span className="font-mono text-[10px] text-[#2E4365]/50 tracking-widest uppercase block mb-2">
-                        [ KEY PROTOCOLS ]
+                      <span className="font-mono text-[9px] text-[#2E4365]/50 tracking-widest uppercase block mb-2 font-bold">
+                        [ CORE PROTOCOLS ]
                       </span>
-                      <ul className="flex flex-col gap-2">
-                        {project.features.map((item, fidx) => (
-                          <li key={fidx} className="font-sans text-xs text-[#2E4365] flex items-start gap-2">
+                      <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {OTHER_PROJECTS[activeProjIdx].features.map((item, fidx) => (
+                          <li key={fidx} className="font-sans text-[11px] text-[#2E4365] flex items-start gap-2" onMouseEnter={playPencilScratch}>
                             <span className="text-[#E5902C] mt-0.5">•</span>
                             <span>{item}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
-                  </div>
 
-                  {/* Right block (Challenges / Lessons / Links) */}
-                  <div className="lg:col-span-3 flex flex-col gap-6 bg-[#EBDDC5]/30 p-5 border border-dashed border-[#2E4365]/20 rounded-sm">
-                    <div>
-                      <span className="font-mono text-[10px] text-[#2E4365]/60 block mb-1 uppercase">
-                        CHALLENGES MET
-                      </span>
-                      <p className="font-hand text-sm text-[#2E4365] leading-snug">
-                        {project.challenges}
-                      </p>
-                    </div>
-
-                    <div className="pt-4 border-t border-[#2E4365]/15">
-                      <span className="font-mono text-[10px] text-[#2E4365]/60 block mb-1 uppercase">
-                        LESSON EXTRACTED
-                      </span>
-                      <p className="font-hand text-sm text-[#2E4365] leading-snug">
-                        {project.lessonsLearned}
-                      </p>
-                    </div>
-
-                    <div className="pt-4 border-t border-[#2E4365]/15">
-                      <span className="font-mono text-[10px] text-[#2E4365]/60 block mb-2 uppercase">
-                        COMPILED STACK
-                      </span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {project.tech.map((item, tidx) => (
-                          <span 
-                            key={tidx} 
-                            className="px-1.5 py-0.5 bg-[#F5EBD8] text-[#2E4365] border border-[#2E4365]/20 font-mono text-[9px] rounded-xs"
-                          >
-                            {item}
-                          </span>
-                        ))}
+                    {/* Challenges & Lessons Block */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-[#2E4365]/10">
+                      <div>
+                        <span className="font-mono text-[9px] text-[#8A3B08] block mb-1 uppercase font-bold">CHALLENGES MET</span>
+                        <p className="font-hand text-sm text-[#2E4365] leading-snug">
+                          {OTHER_PROJECTS[activeProjIdx].challenges}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="font-mono text-[9px] text-[#E5902C] block mb-1 uppercase font-bold">LESSON EXTRACTED</span>
+                        <p className="font-hand text-sm text-[#2E4365] leading-snug">
+                          {OTHER_PROJECTS[activeProjIdx].lessonsLearned}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Glossy Links wrapped in GlareHover */}
-                    <div className="pt-4 mt-auto">
-                      <GlareHover
-                        width="100%"
-                        height="auto"
-                        borderColor="#2E4365"
-                        borderRadius="4px"
-                        glareOpacity={0.2}
-                      >
-                        <a 
-                          href="https://github.com/vikaspokkuluri" 
-                          target="_blank" 
-                          rel="noreferrer" 
-                          className="w-full flex items-center justify-between px-3 py-2 bg-[#E5902C] text-[#EBDDC5] hover:bg-[#8A3B08] transition-colors font-mono text-xs font-bold"
+                    {/* Compiled Stack & Button */}
+                    <div className="pt-4 border-t border-[#2E4365]/15 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-auto">
+                      <div>
+                        <span className="font-mono text-[9px] text-[#2E4365]/60 block mb-1.5 uppercase font-bold">
+                          COMPILED STACK
+                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {OTHER_PROJECTS[activeProjIdx].tech.map((item, tidx) => (
+                            <span 
+                              key={tidx} 
+                              className="px-1.5 py-0.5 bg-[#EBDDC5] text-[#2E4365] border border-[#2E4365]/20 font-mono text-[9px] rounded-xs"
+                            >
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Code Repo Button */}
+                      <div className="w-full sm:w-auto">
+                        <GlareHover
+                          width="100%"
+                          height="auto"
+                          borderColor="#2E4365"
+                          borderRadius="4px"
+                          glareOpacity={0.2}
                         >
-                          <span>CODE REPOSITORY</span>
-                          <ArrowUpRight className="w-4 h-4" />
-                        </a>
-                      </GlareHover>
+                          <a 
+                            href="https://github.com/vikaspokkuluri" 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            className="flex items-center justify-between gap-3 px-4 py-2 bg-[#E5902C] text-[#EBDDC5] hover:bg-[#8A3B08] transition-colors font-mono text-xs font-bold cursor-pointer"
+                            onClick={playStampClack}
+                          >
+                            <span>CODE BLUEPRINTS</span>
+                            <ArrowUpRight className="w-4 h-4" />
+                          </a>
+                        </GlareHover>
+                      </div>
                     </div>
 
                   </div>
 
-                </div>
+                </motion.div>
+                </AnimatePresence>
+              
               </div>
-            ))}
-          </div>
+            </div>
+
+            {/* Hand-drawn Page Number */}
+            <div className="absolute bottom-[-24px] right-4 font-mono text-[9px] text-[#2E4365]/40 select-none pointer-events-none uppercase tracking-widest mt-2">
+              Page 03 // Project Spreads • July 2026 Entry
+            </div>
         </section>
 
 
@@ -725,7 +896,7 @@ export default function App() {
                 [ MOTIVATIONS & PRINCIPLES ]
               </span>
               <SplitText 
-                text="WHY I BUILD" 
+                text="FIELD NOTES" 
                 tag="h2" 
                 className="font-display font-black text-4xl md:text-6xl uppercase tracking-tight text-[#2E4365]"
                 textAlign="left"
@@ -749,6 +920,11 @@ export default function App() {
                 "Good software should disappear. The experience should remain."
               </p>
             </div>
+          </div>
+
+          {/* Physical page number stamp */}
+          <div className="absolute bottom-0 right-0 font-mono text-[9px] text-[#2E4365]/40 select-none pointer-events-none uppercase tracking-widest mt-4">
+            Page 04 // Field Notes • July 2026 Entry
           </div>
         </section>
 
@@ -823,6 +999,11 @@ export default function App() {
               </ul>
             </div>
           </div>
+
+          {/* Physical page number stamp */}
+          <div className="absolute bottom-0 right-0 font-mono text-[9px] text-[#2E4365]/40 select-none pointer-events-none uppercase tracking-widest mt-4">
+            Page 05 // SDE Toolbox • July 2026 Entry
+          </div>
         </section>
 
 
@@ -885,6 +1066,11 @@ export default function App() {
               </div>
             ))}
           </div>
+
+          {/* Physical page number stamp */}
+          <div className="absolute bottom-0 right-0 font-mono text-[9px] text-[#2E4365]/40 select-none pointer-events-none uppercase tracking-widest mt-4">
+            Page 06 // Work Chronicle • July 2026 Entry
+          </div>
         </section>
 
 
@@ -929,6 +1115,11 @@ export default function App() {
             <div className="font-mono text-xs text-[#E5902C] bg-[#2E4365] px-3 py-1.5 rounded-sm border border-[#2E4365]">
               EXPECTED {EDUCATION[0].year}
             </div>
+          </div>
+
+          {/* Physical page number stamp */}
+          <div className="absolute bottom-0 right-0 font-mono text-[9px] text-[#2E4365]/40 select-none pointer-events-none uppercase tracking-widest mt-4">
+            Page 07 // Academics • July 2026 Entry
           </div>
         </section>
 
@@ -977,6 +1168,11 @@ export default function App() {
                 </p>
               </div>
             ))}
+          </div>
+
+          {/* Physical page number stamp */}
+          <div className="absolute bottom-0 right-0 font-mono text-[9px] text-[#2E4365]/40 select-none pointer-events-none uppercase tracking-widest mt-4">
+            Page 08 // Process Blueprints • July 2026 Entry
           </div>
         </section>
 
@@ -1145,6 +1341,11 @@ export default function App() {
             </div>
 
           </div>
+
+          {/* Physical page number stamp */}
+          <div className="absolute bottom-0 right-0 font-mono text-[9px] text-[#2E4365]/40 select-none pointer-events-none uppercase tracking-widest mt-4">
+            Page 09 // Radio Transmission • July 2026 Entry
+          </div>
         </section>
 
       </main>
@@ -1175,12 +1376,32 @@ export default function App() {
 
           {/* Quick instructions & clock */}
           <div className="flex flex-col md:items-end gap-3 text-left md:text-right">
-            <div className="flex flex-wrap md:justify-end gap-4 font-mono text-[10px] text-[#2E4365]/60 uppercase">
+            <div className="flex flex-wrap md:justify-end gap-4 font-mono text-[10px] text-[#2E4365]/60 uppercase items-center">
+              {/* Sound toggle button */}
+              <button 
+                onClick={() => {
+                  setSoundOn(prev => {
+                    const next = !prev;
+                    toggleSound(next);
+                    return next;
+                  });
+                  playSwitchClick();
+                }}
+                className="flex items-center gap-1 bg-[#EBDDC5] hover:bg-[#F3D58D] border border-[#2E4365]/30 px-2 py-1 rounded-sm text-[10px] text-[#2E4365] font-mono cursor-pointer active:scale-95"
+                title="Mute / Unmute physical sound effects"
+              >
+                {soundOn ? <Volume2 className="w-3.5 h-3.5 text-green-600" /> : <VolumeX className="w-3.5 h-3.5 text-red-500" />}
+                <span>SOUND: {soundOn ? 'ON' : 'OFF'}</span>
+              </button>
+              
               <span className="flex items-center gap-1.5">
-                <span className="px-1 bg-[#EBDDC5] border border-[#2E4365]/20 rounded-xs">[ B ]</span> Alternate Theme
+                <span className="px-1 bg-[#EBDDC5] border border-[#2E4365]/20 rounded-xs">[ S ]</span> Mute
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="px-1 bg-[#EBDDC5] border border-[#2E4365]/20 rounded-xs">[ G ]</span> Grid Toggle
+                <span className="px-1 bg-[#EBDDC5] border border-[#2E4365]/20 rounded-xs">[ B ]</span> Theme
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="px-1 bg-[#EBDDC5] border border-[#2E4365]/20 rounded-xs">[ G ]</span> Grid
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="px-1 bg-[#EBDDC5] border border-[#2E4365]/20 rounded-xs">[ Double Click ]</span> Sketchbook
