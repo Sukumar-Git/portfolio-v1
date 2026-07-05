@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { X, Calendar, PenTool } from 'lucide-react';
 import { CONCEPT_SKETCHES } from '../data';
+import { playXpSound } from '../utils/audio';
 
 interface SketchbookModalProps {
   onClose: () => void;
@@ -21,13 +22,17 @@ export default function SketchbookModal({ onClose }: SketchbookModalProps) {
 
     // Escape key listener
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        playXpSound();
+        onClose();
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
   const handleCloseClick = () => {
+    playXpSound();
     gsap.to(containerRef.current, { 
       y: 30, 
       rotate: 1, 

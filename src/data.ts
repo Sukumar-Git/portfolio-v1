@@ -16,7 +16,8 @@ export const NEXUS_AI: Project = {
   ],
   challenges: 'Managing complex asynchronous state streams when chaining multiple sub-agents, combined with ensuring the reactive editor state stayed in sync without lag or cursor jumping.',
   lessonsLearned: 'Staggering API request flows and using debounced optimistic updates is critical for a smooth rich-text AI interaction.',
-  tech: ['React', 'Node.js', 'MongoDB', 'REST APIs', 'Docker']
+  tech: ['React', 'Node.js', 'MongoDB', 'REST APIs', 'Docker'],
+  github: 'https://github.com/Sukumar-Git/Nexus_ai'
 };
 
 export const OTHER_PROJECTS: Project[] = [
@@ -34,7 +35,8 @@ export const OTHER_PROJECTS: Project[] = [
     ],
     challenges: 'Bypassing strict Content Security Policies (CSP) on enterprise domains while securely streaming parsed payloads in real-time.',
     lessonsLearned: 'Utilizing non-invasive background service workers to broker external payloads is the safest way to maintain cross-domain security.',
-    tech: ['JavaScript', 'Chrome Extension API', 'WebSockets', 'Tailwind']
+    tech: ['JavaScript', 'Chrome Extension API', 'WebSockets', 'Tailwind'],
+    github: 'https://github.com/Sukumar-Git/Nexus_ai'
   },
   {
     id: 'expense-tracker',
@@ -50,7 +52,8 @@ export const OTHER_PROJECTS: Project[] = [
     ],
     challenges: 'Writing a custom local database indexing system over browser storage that supports rapid searching and complex tag filtering.',
     lessonsLearned: 'Clean UX and speed beat rich visual charts every single day. Users just want to get in, log, and get out.',
-    tech: ['React', 'TypeScript', 'IndexedDB', 'Tailwind CSS']
+    tech: ['React', 'TypeScript', 'IndexedDB', 'Tailwind CSS'],
+    github: 'https://github.com/Sukumar-Git'
   },
   {
     id: 'campus-connect',
@@ -66,7 +69,8 @@ export const OTHER_PROJECTS: Project[] = [
     ],
     challenges: 'Handling real-time comment streams under concurrent traffic spikes when popular campus events are announced.',
     lessonsLearned: 'Designing lightweight schema models and leveraging connection polling ensures low-cost server operation during usage peaks.',
-    tech: ['React', 'Node.js', 'Express', 'MongoDB', 'Socket.io']
+    tech: ['React', 'Node.js', 'Express', 'MongoDB', 'Socket.io'],
+    github: 'https://github.com/Sukumar-Git'
   },
   {
     id: 'ai-resume-analyzer',
@@ -82,7 +86,8 @@ export const OTHER_PROJECTS: Project[] = [
     ],
     challenges: 'Extracting structured tables and text from multi-column PDFs without losing spatial reading hierarchies.',
     lessonsLearned: 'Parsing PDFs entirely on the client before forwarding lightweight raw text saves server memory and speeds up overall analysis.',
-    tech: ['React', 'Node.js', 'Express', 'PDF.js', 'Gemini Pro API']
+    tech: ['React', 'Node.js', 'Express', 'PDF.js', 'Gemini Pro API'],
+    github: 'https://github.com/Sukumar-Git'
   }
 ];
 
@@ -132,10 +137,9 @@ export const SECTIONS = [
   { id: 'hero', name: 'Notebook Cover' },
   { id: 'nexus-ai', name: 'Nexus AI centerpiece' },
   { id: 'other-projects', name: 'Other spreads' },
-  { id: 'why-i-build', name: 'Field Notes' },
+  { id: 'bento', name: 'Bento' },
   { id: 'tech-stack', name: 'Toolbox' },
   { id: 'experience', name: 'Experience' },
-  { id: 'education', name: 'Education' },
   { id: 'process', name: 'Process' },
   { id: 'contact', name: 'Contact' }
 ];
@@ -182,3 +186,25 @@ export const CONCEPT_SKETCHES = [
     ]
   }
 ];
+
+export const TECH_STACK = {
+  build: [
+    { name: 'React (Vite)', desc: '● Frontend Core' },
+    { name: 'Tailwind CSS', desc: '● Styling Engine' },
+    { name: 'JavaScript / HTML5 / CSS3', desc: '● Web Standards' },
+    { name: 'Java & Python', desc: '● Backend / Algorithms' }
+  ],
+  ship: [
+    { name: 'Node.js & Express.js', desc: '▲ REST APIs' },
+    { name: 'MongoDB', desc: '▲ Database' },
+    { name: 'Git & GitHub', desc: '▲ Version Control' },
+    { name: 'Postman & npm', desc: '▲ Tooling' }
+  ],
+  learn: [
+    { name: 'TypeScript & Next.js', desc: '◆ Next Gen React' },
+    { name: 'Cloud Computing & Docker', desc: '◆ Containers' },
+    { name: 'DevOps & System Design', desc: '◆ Architecture' },
+    { name: 'AI Engineering', desc: '◆ Intelligent Tools' }
+  ]
+};
+

@@ -103,3 +103,19 @@ body.alt-theme {
   --citrine-brown: #5E2F11;
   background-color: var(--pearl);
 }
+
+/* Hide default cursor on desktop devices with hover capabilities to support smooth custom cursor */
+@media (hover: hover) and (pointer: fine) {
+  html, body, a, button, select, [role="button"], .cursor-pointer, input[type="submit"], input[type="button"] {
+    cursor: none !important;
+  }
+  input, textarea {
+    cursor: text;
+  }
+}
+
+
+
+
+
+

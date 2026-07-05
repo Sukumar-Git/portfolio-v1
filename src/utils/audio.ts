@@ -269,6 +269,20 @@ export function stopHum() {
       humGain = null;
     }
   } catch (e) {
-    console.warn('Stop hum failed', e);
+    console.warn('Hum stop failed', e);
   }
 }
+
+const xpSoundUrl = new URL('../audio/minecraft-xp-sound.mp3', import.meta.url).href;
+
+export function playXpSound() {
+  if (!isSoundEnabled) return;
+  try {
+    const audio = new Audio(xpSoundUrl);
+    audio.volume = 0.25; // Clean, comfortable level
+    audio.play().catch(e => console.warn('Audio play failed', e));
+  } catch (e) {
+    console.warn('XP Sound play failed', e);
+  }
+}
+
